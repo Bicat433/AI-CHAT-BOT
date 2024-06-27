@@ -9,7 +9,11 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 from langchain.llms import HuggingFaceHub
-
+#Extracts text 
+"""
+#important to note we can use Huggingface embeddings as well in this case i have removed it because it was taking 
+a lot of time to train, and respond. ie use embeddings from hugging face, and any model 
+"""
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
@@ -18,7 +22,7 @@ def get_pdf_text(pdf_docs):
             text += page.extract_text()
     return text
 
-
+#Splits Text into chunks for easier processing 
 def get_text_chunks(text):
     text_splitter = CharacterTextSplitter(
         separator="\n",
@@ -29,13 +33,13 @@ def get_text_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
-
+#Creates Embeddings i.e turn words to vectors saves them in vectordb(vectorstore)
 def get_vectorstore(text_chunks):
     embeddings = OpenAIEmbeddings()
     vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
     return vectorstore
 
-
+#vector db used to initiate calls with api
 def get_conversation_chain(vectorstore):
     llm = ChatOpenAI()
 
@@ -61,10 +65,10 @@ def handle_userinput(user_question):
             st.write(bot_template.replace(
                 "{{MSG}}", message.content), unsafe_allow_html=True)
 
-
+#Stramlit UI
 def main():
     load_dotenv()
-    st.set_page_config(page_title="Ai Project-HR ChatBOt",
+    st.set_page_config(page_title="Ai Project-HR-Medical-ChatBOt",
                        page_icon=":books:")
     st.write(css, unsafe_allow_html=True)
 
@@ -73,13 +77,13 @@ def main():
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
 
-    st.header("AI HR CHATBOT :books:")
+    st.header("AI CHATBOT :books:")
     user_question = st.text_input("Ask a question about your Resume:")
     if user_question:
         handle_userinput(user_question)
 
     with st.sidebar:
-        st.subheader("Your Resumes")
+        st.subheader("Your Files")
         pdf_docs = st.file_uploader(
             "Upload your PDFs here and click on 'Process'", accept_multiple_files=True)
         if st.button("Process"):
